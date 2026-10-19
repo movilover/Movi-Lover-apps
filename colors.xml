@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ml_bg">#0B0818</color>
+    <color name="ml_icon_bg">#150A33</color>
+    <color name="ml_accent">#A855F7</color>
+</resources>
