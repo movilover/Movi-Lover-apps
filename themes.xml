@@ -1,0 +1,9 @@
+<resources>
+    <style name="Theme.MoviLover" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@drawable/splash_bg</item>
+        <item name="android:statusBarColor">@color/ml_bg</item>
+        <item name="android:navigationBarColor">@color/ml_bg</item>
+        <item name="android:colorAccent">@color/ml_accent</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+</resources>
