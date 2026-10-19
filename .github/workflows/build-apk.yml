@@ -15,6 +15,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # ফোন থেকে আপলোড করা এলোমেলো ফাইল ঠিক ফোল্ডারে সাজায় + logo.png থেকে আইকন বানায়
+      - name: Prepare project files and icons
+        run: |
+          python3 -m pip install --quiet --break-system-packages pillow || python3 -m pip install --quiet pillow
+          python3 prepare.py
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
