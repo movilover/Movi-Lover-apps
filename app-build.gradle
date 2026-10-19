@@ -1,0 +1,50 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// সাইটের লিংক: প্রজেক্টের মূল ফোল্ডারের site-url.txt থেকে (GitHub Actions-এ SITE_URL ভেরিয়েবল দিলে সেটাই প্রাধান্য পায়)
+def envSite = System.getenv('SITE_URL')
+def siteUrl = ((envSite != null && !envSite.trim().isEmpty()) ? envSite : rootProject.file('site-url.txt').text).trim()
+if (siteUrl.contains('YOUR-') || !siteUrl.startsWith('https://')) {
+    throw new GradleException('site-url.txt-এ আপনার সাইটের আসল https লিংক বসান (যেমন https://username.github.io/repo/u.html)')
+}
+def runNumber = (System.getenv('RUN_NUMBER') ?: '1').toInteger()
+
+android {
+    namespace 'com.movilover.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'com.movilover.app'
+        minSdk 21
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0.${runNumber}"
+        buildConfigField 'String', 'SITE_URL', "\"${siteUrl}\""
+    }
+
+    signingConfigs {
+        release {
+            storeFile rootProject.file('release.keystore')
+            storePassword (System.getenv('KS_PASS') ?: 'movilover123')
+            keyAlias (System.getenv('KS_ALIAS') ?: 'movilover')
+            keyPassword (System.getenv('KS_PASS') ?: 'movilover123')
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    buildFeatures { buildConfig true }
+    lint { checkReleaseBuilds false; abortOnError false }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    kotlinOptions { jvmTarget = '17' }
+}
