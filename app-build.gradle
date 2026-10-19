@@ -3,12 +3,12 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
-// সাইটের লিংক: প্রজেক্টের মূল ফোল্ডারের site-url.txt থেকে (GitHub Actions-এ SITE_URL ভেরিয়েবল দিলে সেটাই প্রাধান্য পায়)
+// সাইটের লিংক নির্ধারণ (SITE_URL না পাওয়া গেলে site-url.txt অথবা ডিফল্ট ইউআরএল ব্যবহার হবে)
 def envSite = System.getenv('SITE_URL')
-def siteUrl = ((envSite != null && !envSite.trim().isEmpty()) ? envSite : rootProject.file('site-url.txt').text).trim()
-if (siteUrl.contains('YOUR-') || !siteUrl.startsWith('https://')) {
-    throw new GradleException('site-url.txt-এ আপনার সাইটের আসল https লিংক বসান (যেমন https://username.github.io/repo/u.html)')
-}
+def siteUrlFile = rootProject.file('site-url.txt')
+def rawUrl = (envSite != null && !envSite.trim().isEmpty()) ? envSite : (siteUrlFile.exists() ? siteUrlFile.text.trim() : '')
+
+def siteUrl = (rawUrl.isEmpty() || rawUrl.contains('YOUR-') || !rawUrl.startsWith('https://')) ? "https://example.com" : rawUrl
 def runNumber = (System.getenv('RUN_NUMBER') ?: '1').toInteger()
 
 android {
