@@ -1,4 +1,4 @@
-name: Build Movi Lover APK
+name: Build Movie Lover APK
 
 # যখন এই রিপোজিটরিতে (অ্যাপের খোলস) কিছু push হবে, অথবা হাতে "Run workflow" চাপবেন
 on:
@@ -53,9 +53,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}
-          name: Movi Lover v${{ github.run_number }}
+          name: Movie Lover v${{ github.run_number }}
           make_latest: true
           files: MoviLover.apk
           body: |
-            Movi Lover অ্যাপ (Android)। ডাউনলোড: নিচের MoviLover.apk।
+            Movie Lover অ্যাপ (Android)। ডাউনলোড: নিচের MoviLover.apk।
             সাইটের আপডেট অ্যাপে নিজে থেকেই আসে।
