@@ -1,13 +1,12 @@
 name: Build Movie Lover APK
 
-# যখন এই রিপোজিটরিতে (অ্যাপের খোলস) কিছু push হবে, অথবা হাতে "Run workflow" চাপবেন
 on:
   push:
     branches: [ main, master ]
   workflow_dispatch:
 
 permissions:
-  contents: write   # Release-এ APK আপলোডের জন্য
+  contents: write
 
 jobs:
   build:
@@ -15,11 +14,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ফোন থেকে আপলোড করা এলোমেলো ফাইল ঠিক ফোল্ডারে সাজায় + logo.png থেকে আইকন বানায়
-      - name: Prepare project files and icons
+      # রিপোর project.zip খুলে প্রজেক্ট বানায় এবং সাইটের লিংক বসায়
+      - name: Unpack project and set site link
+        env:
+          SITE_URL_VAR: ${{ vars.SITE_URL }}
         run: |
-          python3 -m pip install --quiet --break-system-packages pillow || python3 -m pip install --quiet pillow
-          python3 prepare.py
+          set -e
+          if [ ! -f project.zip ]; then echo "❌ রিপোর রুটে project.zip নেই — ওটা আপলোড করুন"; exit 1; fi
+          rm -rf proj && mkdir proj && unzip -q project.zip -d proj
+          URL="$SITE_URL_VAR"
+          if [ -z "$URL" ] && [ -f site-url.txt ]; then URL="$(tr -d '\r\n ' < site-url.txt)"; fi
+          case "$URL" in
+            https://*) ;;
+            *) echo "❌ সাইটের লিংক নেই। Settings → Secrets and variables → Actions → Variables-এ SITE_URL দিন (https://...)"; exit 1 ;;
+          esac
+          case "$URL" in
+            *YOUR-*) echo "❌ SITE_URL-এ এখনো নমুনা লেখা আছে, আসল লিংক দিন"; exit 1 ;;
+          esac
+          printf '%s' "$URL" > proj/site-url.txt
+          echo "Site link: $URL"
 
       - uses: actions/setup-java@v4
         with:
@@ -30,30 +43,36 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      # ঐচ্ছিক (বেশি নিরাপদ): নিজের গোপন কিস্টোর Secrets-এ রাখলে সেটাই ব্যবহার হবে — README দেখুন
+      # ঐচ্ছিক: নিজের গোপন কিস্টোর Secrets-এ থাকলে (KEYSTORE_BASE64, KS_PASS, KS_ALIAS) সেটা ব্যবহার হবে
       - name: Use private keystore (if provided)
+        working-directory: proj
         env:
           KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          KS_PASS_S: ${{ secrets.KS_PASS }}
+          KS_ALIAS_S: ${{ secrets.KS_ALIAS }}
         run: |
-          if [ -n "$KS_B64" ]; then echo "$KS_B64" | base64 -d > release.keystore; echo "private keystore in use"; fi
+          if [ -n "$KS_B64" ] && [ -n "$KS_PASS_S" ] && [ -n "$KS_ALIAS_S" ]; then
+            echo "$KS_B64" | base64 -d > release.keystore
+            echo "KS_PASS=$KS_PASS_S" >> "$GITHUB_ENV"
+            echo "KS_ALIAS=$KS_ALIAS_S" >> "$GITHUB_ENV"
+            echo "private keystore in use"
+          fi
 
       - name: Build signed release APK
+        working-directory: proj
         env:
           RUN_NUMBER: ${{ github.run_number }}
-          # ঐচ্ছিক: রিপোজিটরি Settings → Variables → SITE_URL দিলে site-url.txt-এর বদলে ওটা ব্যবহার হবে
-          SITE_URL: ${{ vars.SITE_URL }}
-          KS_PASS: ${{ secrets.KS_PASS }}
-          KS_ALIAS: ${{ secrets.KS_ALIAS }}
         run: gradle --no-daemon assembleRelease
 
       - name: Rename APK
+        working-directory: proj
         run: cp app/build/outputs/apk/release/app-release.apk MoviLover.apk
 
       - name: Save APK as downloadable build artifact
         uses: actions/upload-artifact@v4
         with:
           name: MoviLover-apk
-          path: MoviLover.apk
+          path: proj/MoviLover.apk
 
       - name: Publish release (stable download link)
         uses: softprops/action-gh-release@v2
@@ -61,7 +80,7 @@ jobs:
           tag_name: v${{ github.run_number }}
           name: Movie Lover v${{ github.run_number }}
           make_latest: true
-          files: MoviLover.apk
+          files: proj/MoviLover.apk
           body: |
             Movie Lover অ্যাপ (Android)। ডাউনলোড: নিচের MoviLover.apk।
             সাইটের আপডেট অ্যাপে নিজে থেকেই আসে।
