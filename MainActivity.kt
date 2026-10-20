@@ -21,7 +21,6 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
-import android.widget.ProgressBar
 import android.widget.Toast
 
 /**
@@ -34,7 +33,6 @@ class MainActivity : Activity() {
 
     private lateinit var root: FrameLayout
     private lateinit var web: WebView
-    private lateinit var progress: ProgressBar
     private var customView: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private var lastBackAt = 0L
@@ -52,14 +50,8 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.parseColor("#0B0818"))
             layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
-        progress = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-            max = 100
-            visibility = View.GONE
-            progressDrawable.setColorFilter(Color.parseColor("#E11D2E"), android.graphics.PorterDuff.Mode.SRC_IN)
-            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 6)
-        }
+        
         root.addView(web)
-        root.addView(progress)
         setContentView(root)
 
         with(web.settings) {
@@ -125,14 +117,6 @@ class MainActivity : Activity() {
             return if (isInternal(u)) false else openExternal(u.toString())
         }
 
-        override fun onPageStarted(view: WebView, url: String?, favicon: Bitmap?) {
-            progress.visibility = View.VISIBLE
-        }
-
-        override fun onPageFinished(view: WebView, url: String?) {
-            progress.visibility = View.GONE
-        }
-
         override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
             if (request.isForMainFrame && !failed) {
                 failed = true
@@ -142,11 +126,6 @@ class MainActivity : Activity() {
     }
 
     private inner class AppChrome : WebChromeClient() {
-        override fun onProgressChanged(view: WebView, newProgress: Int) {
-            progress.progress = newProgress
-            if (newProgress >= 100) progress.visibility = View.GONE
-        }
-
         // window.open / target=_blank → বাইরে খোলা (অ্যাপের পেজ বদলায় না)
         override fun onCreateWindow(view: WebView, isDialog: Boolean, isUserGesture: Boolean, resultMsg: Message): Boolean {
             val tmp = WebView(this@MainActivity)
