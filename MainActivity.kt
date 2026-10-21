@@ -27,6 +27,9 @@ import android.widget.Toast
  * Movi Lover — সাইটকে অ্যাপ হিসেবে চালানোর খোলস (WebView)।
  * সাইট আপডেট করে GitHub Pages-এ push করলেই অ্যাপের ভেতরে নিজে থেকে নতুন সংস্করণ চলে আসে —
  * নতুন APK বানানো লাগে না (শুধু অ্যাপের খোলস বদলালে লাগে)।
+ *
+ * এই ফাইলে কোনো লোডিং/প্রোগ্রেস বার নেই (উপরের লাল দাগ বন্ধ)।
+ * নতুন: Bridge.openUrl(url) — সাইটের "আপডেট করুন / ডাউনলোড" বাটন থেকে সরাসরি বাইরের ব্রাউজারে (Chrome) খোলে।
  */
 @Suppress("DEPRECATION")
 class MainActivity : Activity() {
@@ -50,7 +53,7 @@ class MainActivity : Activity() {
             setBackgroundColor(Color.parseColor("#0B0818"))
             layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
-        
+
         root.addView(web)
         setContentView(root)
 
@@ -68,7 +71,7 @@ class MainActivity : Activity() {
             builtInZoomControls = false
             displayZoomControls = false
             setSupportZoom(false)
-            // সাইট এই লেখা দেখে বুঝবে সে অ্যাপের ভেতরে চলছে
+            // সাইট এই লেখা দেখে বুঝবে সে অ্যাপের ভেতরে চলছে (এবং কোন ভার্সনে)
             userAgentString = userAgentString + " MoviLoverApp/" + BuildConfig.VERSION_NAME
         }
         CookieManager.getInstance().apply {
@@ -176,6 +179,12 @@ class MainActivity : Activity() {
     inner class Bridge {
         @JavascriptInterface fun retry() {
             runOnUiThread { loadSite() }
+        }
+
+        // আপডেট/ডাউনলোড: শুধু https লিংক, বাইরের ব্রাউজারে (Chrome) খোলে — সেখান থেকে APK নামে
+        @JavascriptInterface fun openUrl(url: String) {
+            if (!url.startsWith("https://")) return
+            runOnUiThread { openExternal(url) }
         }
     }
 
