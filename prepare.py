@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Movie Lover: রিপোর রুটে এলোমেলো (flat) আপলোড করা ফাইলগুলো বিল্ডের আগে ঠিক ফোল্ডারে সাজায়
-এবং logo.png থেকে সব সাইজের অ্যাপ আইকন বানায়। ফাইল ঠিক ফোল্ডারে আগে থেকেই থাকলে সেটা বদলায় না।"""
+এবং logo.png থেকে সব সাইজের অ্যাপ আইকন বানায়।
+আপডেট: রুটে ফাইল থাকলে সেটাই সবসময় জিতবে (আগে থেকে ফোল্ডারে থাকা পুরোনো ফাইল ওভাররাইট হবে)।"""
 import os, shutil, sys
 
 RES = "app/src/main/res"
@@ -17,10 +18,11 @@ MAP = {
     "ic_launcher_round.xml": RES + "/mipmap-anydpi-v26/ic_launcher_round.xml",
 }
 for src, dst in MAP.items():
-    if os.path.isfile(src) and not os.path.isfile(dst):
+    if os.path.isfile(src):
+        existed = os.path.isfile(dst)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         shutil.copyfile(src, dst)
-        print("placed", src, "->", dst)
+        print(("OVERWROTE" if existed else "placed"), src, "->", dst)
 
 # ---- আইকন: logo.png থেকে ----
 if os.path.isfile("logo.png"):
