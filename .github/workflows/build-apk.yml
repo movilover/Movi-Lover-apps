@@ -34,6 +34,10 @@ jobs:
           printf '%s' "$URL" > proj/site-url.txt
           echo "Site link: $URL"
 
+      # ★ নতুন ধাপ: রিপোর রুটের MainActivity.kt, colors.xml, themes.xml ইত্যাদি project.zip এর পুরোনো ফাইলের জায়গায় বসায়
+      - name: Apply latest files from repo root
+        run: python3 prepare.py proj
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
